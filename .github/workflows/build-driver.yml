@@ -1,0 +1,31 @@
+name: Build KMDF Driver
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build Driver
+      run: |
+        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10"
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Rt5650SpbFilter-x64-Release
+        path: |
+          x64/Release/Rt5650SpbFilter.sys
+          x64/Release/Rt5650SpbFilter.inf
+          x64/Release/Rt5650SpbFilter.cer
