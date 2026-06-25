@@ -12,29 +12,30 @@ jobs:
         Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2196230" -OutFile "$env:TEMP\wdksetup.exe"
         Start-Process -Wait "$env:TEMP\wdksetup.exe" -ArgumentList "/q /norestart"
 
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
     - name: Build Driver
+      run: |
+        # Use MSBuild which is the standard way to build drivers
+        # Windows-latest runner already has WDK components, but we need to ensure the project uses them
+        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10" /p:SignMode=Off
+
+    - name: Prepare Artifacts
       shell: pwsh
       run: |
-        $wdkBase = "C:\Program Files (x86)\Windows Kits\10"
-        $wdkVer = (Get-ChildItem "$wdkBase\Include" | Where-Object {$_.Name -like "10.*"} | Sort-Object Name -Descending | Select-Object -First 1).Name
-        $vsBase = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
-        $msvcVer = (Get-ChildItem $vsBase | Sort-Object Name -Descending | Select-Object -First 1).Name
-        $cl = "$vsBase\$msvcVer\bin\HostX64\x64\cl.exe"
-        $link = "$vsBase\$msvcVer\bin\HostX64\x64\link.exe"
-        $kmInc = "$wdkBase\Include\$wdkVer\km"
-        $sharedInc = "$wdkBase\Include\$wdkVer\shared"
-        $kmLib = "$wdkBase\Lib\$wdkVer\km\x64"
-        $wdfVer = (Get-ChildItem "$wdkBase\Include\wdf\kmdf" -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1).Name
-        $wdfInc = "$wdkBase\Include\wdf\kmdf\$wdfVer"
-        $wdfLib = "$wdkBase\Lib\wdf\kmdf\x64\$wdfVer"
-        New-Item -Force -ItemType Directory -Path "out"
-        & $cl /nologo /c /Zi /O2 /GS /Zc:wchar_t /TC "/I$kmInc" "/I$sharedInc" "/I$wdfInc" /D_AMD64_ /DAMD64 /D_WIN64 /DNTDDI_VERSION=0x0A000000 /D_WIN32_WINNT=0x0A00 /Fo"out\Rt5650SpbFilter.obj" Rt5650SpbFilter.c
-        if ($LASTEXITCODE -ne 0) { exit 1 }
-        & $link /nologo /SUBSYSTEM:NATIVE /DRIVER /NODEFAULTLIB /ENTRY:DriverEntry "/OUT:out\Rt5650SpbFilter.sys" "/LIBPATH:$kmLib" "/LIBPATH:$wdfLib" ntoskrnl.lib hal.lib wdfldr.lib wdf01000.lib "out\Rt5650SpbFilter.obj"
-        if ($LASTEXITCODE -ne 0) { exit 1 }
+        New-Item -ItemType Directory -Force -Path "out"
+        Copy-Item -Path "x64\Release\Rt5650SpbFilter\Rt5650SpbFilter.sys" -Destination "out\" -ErrorAction SilentlyContinue
+        Copy-Item -Path "x64\Release\Rt5650SpbFilter\Rt5650SpbFilter.inf" -Destination "out\" -ErrorAction SilentlyContinue
+        # If the path is different, try to find it
+        if (-not (Test-Path "out\Rt5650SpbFilter.sys")) {
+            Get-ChildItem -Recurse -Filter "Rt5650SpbFilter.sys" | Copy-Item -Destination "out\"
+            Get-ChildItem -Recurse -Filter "Rt5650SpbFilter.inf" | Copy-Item -Destination "out\"
+        }
 
     - name: Upload Driver
       uses: actions/upload-artifact@v4
       with:
         name: rt5650-driver
-        path: out\Rt5650SpbFilter.sys
+        path: out\
+
