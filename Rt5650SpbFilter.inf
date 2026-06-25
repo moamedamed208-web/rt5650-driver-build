@@ -1,0 +1,59 @@
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = Extension
+ClassGuid   = {e2f84ce7-8efa-411c-aa69-97454ca4cb57}
+Provider    = %ProviderName%
+ExtensionId = {61cb5b09-0478-41e4-98c5-2b65cc8615ea}
+DriverVer   = 06/25/2026,1.0.0.0
+CatalogFile = Rt5650SpbFilter.cat
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 13
+
+[SourceDisksNames]
+1 = %DiskId1%,,,""
+
+[SourceDisksFiles]
+Rt5650SpbFilter.sys = 1,,
+
+[Manufacturer]
+%MfgName% = DeviceExtensions,NTamd64.10.0...18362
+
+[DeviceExtensions.NTamd64.10.0...18362]
+%Rt5650SpbFilter.DeviceDesc% = Rt5650SpbFilter_Install, ACPI\10EC5650
+
+[Rt5650SpbFilter_Install]
+CopyFiles = Rt5650SpbFilter.CopyFiles
+
+[Rt5650SpbFilter_Install.Services]
+AddService = Rt5650SpbFilter,,Rt5650SpbFilter_Service_Inst
+
+[Rt5650SpbFilter_Install.Filters]
+AddFilter = Rt5650SpbFilter,,Rt5650SpbFilter_Filter_Inst
+
+[Rt5650SpbFilter_Filter_Inst]
+FilterPosition = Lower
+
+[Rt5650SpbFilter_Service_Inst]
+DisplayName   = %Rt5650SpbFilter.SvcDesc%
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %13%\Rt5650SpbFilter.sys
+
+[Rt5650SpbFilter_Install.Wdf]
+KmdfService = Rt5650SpbFilter, Rt5650SpbFilter_WdfSect
+
+[Rt5650SpbFilter_WdfSect]
+KmdfLibraryVersion = 1.15
+
+[Rt5650SpbFilter.CopyFiles]
+Rt5650SpbFilter.sys
+
+[Strings]
+ProviderName                = "Arena.ai"
+MfgName                     = "Arena.ai"
+DiskId1                     = "RT5650 SPB Filter Driver Installation Disk"
+Rt5650SpbFilter.DeviceDesc  = "RT5650 SPB KMDF Filter"
+Rt5650SpbFilter.SvcDesc     = "RT5650 SPB KMDF Filter Driver"

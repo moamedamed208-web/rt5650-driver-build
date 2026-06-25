@@ -1,0 +1,33 @@
+#include <winver.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x3L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "Arena.ai\0"
+            VALUE "FileDescription", "RT5650 SPB KMDF Filter\0"
+            VALUE "FileVersion", "1.0.0.0\0"
+            VALUE "InternalName", "Rt5650SpbFilter.sys\0"
+            VALUE "OriginalFilename", "Rt5650SpbFilter.sys\0"
+            VALUE "ProductName", "RT5650 SPB Filter\0"
+            VALUE "ProductVersion", "1.0.0.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
