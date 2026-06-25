@@ -10,10 +10,15 @@ jobs:
       run: |
         Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2196230" -OutFile "$env:TEMP\wdksetup.exe"
         Start-Process -Wait "$env:TEMP\wdksetup.exe" -ArgumentList "/q /norestart"
+      shell: pwsh
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
 
     - name: Build Driver
       run: |
         msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64
+      shell: cmd
 
     - name: Upload SYS
       uses: actions/upload-artifact@v4
