@@ -1,41 +1,22 @@
 name: Build KMDF Driver
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
     - uses: actions/checkout@v4
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
-
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v2
-
-    - name: Restore NuGet Packages
-      run: nuget restore Rt5650SpbFilter.sln
+    - name: Install WDK
+      run: |
+        Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2196230" -OutFile "$env:TEMP\wdksetup.exe"
+        Start-Process -Wait "$env:TEMP\wdksetup.exe" -ArgumentList "/q /norestart"
 
     - name: Build Driver
       run: |
-        # We use the EWDK or the pre-installed WDK on windows-latest.
-        # If it's missing, we try to use the NuGet-based WDK if the project is configured for it.
-        # For now, let's try a more standard approach for GitHub Actions WDK builds.
-        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10"
+        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64
 
-
-    - name: Upload Artifact
+    - name: Upload SYS
       uses: actions/upload-artifact@v4
       with:
-        name: Rt5650SpbFilter-x64-Release
-        path: |
-          x64/Release/Rt5650SpbFilter.sys
-          x64/Release/Rt5650SpbFilter.inf
-          x64/Release/Rt5650SpbFilter.cer
+        name: rt5650-driver
+        path: Rt5650SpbFilter\x64\Release\Rt5650SpbFilter.sys
