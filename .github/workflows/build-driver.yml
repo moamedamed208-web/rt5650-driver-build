@@ -17,16 +17,19 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Install WDK (via NuGet or Chocolatey)
-      run: |
-        # Windows-latest usually has EWDK or WDK components, but we might need to point to them
-        # Alternatively, we can use a dedicated action if available, or just rely on MSBuild if configured correctly.
-        # Let's try to find where WDK is installed on the runner.
-        dir "C:\Program Files (x86)\Windows Kits\10\Include"
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Restore NuGet Packages
+      run: nuget restore Rt5650SpbFilter.sln
 
     - name: Build Driver
       run: |
-        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10" /p:PlatformToolset="WindowsKernelModeDriver10.0"
+        # We use the EWDK or the pre-installed WDK on windows-latest.
+        # If it's missing, we try to use the NuGet-based WDK if the project is configured for it.
+        # For now, let's try a more standard approach for GitHub Actions WDK builds.
+        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10"
+
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
