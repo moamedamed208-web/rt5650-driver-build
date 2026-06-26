@@ -6,17 +6,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install WDK
-      run: |
-        choco install windows-driver-kit-10 -y
-
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Build Driver
+    - name: Build Driver (EWDK)
+      shell: cmd
       run: |
-        # Force the use of the installed WDK and SDK
-        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10" /p:SignMode=Off /p:WDKBinRoot="C:\Program Files (x86)\Windows Kits\10\bin"
+        curl -L -o ewdk.iso "https://go.microsoft.com/fwlink/?linkid=2196230"
+        powershell -Command "Mount-DiskImage -ImagePath ewdk.iso"
+        for /f "tokens=3" %%a in ('powershell -Command "Get-DiskImage -ImagePath ewdk.iso | Get-Volume | Select-Object -ExpandProperty DriveLetter"') do set EWDK_DRIVE=%%a:
+        call %EWDK_DRIVE%\LaunchBuildEnv.cmd
+        msbuild Rt5650SpbFilter.sln /p:Configuration=Release /p:Platform=x64 /p:TargetVersion="Windows10" /p:SignMode=Off
 
     - name: Prepare Artifacts
       shell: pwsh
